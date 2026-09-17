@@ -58,7 +58,7 @@
             width: 100%;
             padding: 8px 15px;
             border-radius: 20px;
-            border: 1px solid #ffebeb;
+            border: 1px solid #dfe1e5;
             background-color: #f1f3f4;
             outline: none;
         }
@@ -101,6 +101,7 @@
             padding: 10px 20px;
             border-radius: 24px;
             margin-bottom: 30px;
+            background: white;
         }
 
         .search-box:hover {
@@ -126,6 +127,7 @@
             padding: 6px 12px;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 10px;
         }
 
         .shortcuts {
@@ -141,6 +143,13 @@
             color: #202124;
             font-size: 14px;
             width: 80px;
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .shortcuts a:hover {
+            background: #e8eaed;
         }
     </style>
 </head>
@@ -157,7 +166,8 @@
         <button>→</button>
         <button onclick="location.reload()">↻</button>
 
-        <form action="https://www.google.com/search" method="GET">
+        <!-- Added target="_blank" to stop Google from blocking the submission -->
+        <form action="https://google.com" method="GET" target="_blank">
             <input
                 name="q"
                 placeholder="Search Google or enter a URL"
@@ -174,7 +184,8 @@
             <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>
         </div>
 
-        <form class="search-box" action="https://www.google.com/search" method="GET">
+        <!-- Added target="_blank" to stop Google from blocking the submission -->
+        <form class="search-box" action="https://google.com" method="GET" target="_blank">
             <span>⌕</span>
             <input
                 name="q"
@@ -184,10 +195,11 @@
             <button type="submit">Search</button>
         </form>
 
+        <!-- Added target="_blank" to force shortcuts to open past frame blocks -->
         <div class="shortcuts">
-            <a href="https://www.youtube.com">▶ YouTube</a>
-            <a href="https://wikipedia.org">W Wikipedia</a>
-            <a href="https://github.com">◆ GitHub</a>
+            <a href="https://www.youtube.com" target="_blank">▶ YouTube</a>
+            <a href="https://wikipedia.org" target="_blank">W Wikipedia</a>
+            <a href="https://github.com" target="_blank">◆ GitHub</a>
         </div>
 
     </main>
