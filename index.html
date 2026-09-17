@@ -1,6 +1,6 @@
-<!-- These links will bypass the network blocks because schools allow them! -->
-<div class="shortcuts">
-    <button onclick="bypassLink('https://www.google.com')">🔍 Google</button>
-    <button onclick="bypassLink('https://maps.google.com')">🗺️ Maps</button>
-    <button onclick="bypassLink('https://google.com')">🌍 Earth</button>
-</div>
+<form class="toolbar-form" onsubmit="openWebsite(event)">
+    <input
+        id="address"
+        placeholder="Search Google or enter a URL"
+    >
+</form>
