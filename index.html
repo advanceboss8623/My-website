@@ -1,133 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrome</title>
+    <title>My Chrome</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- Top browser area -->
-    <div class="browser">
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <div class="tab active">
-                <div class="tab-icon">🌐</div>
-                <span>New Tab</span>
-                <button class="close-tab">×</button>
-            </div>
-
-            <button class="new-tab" onclick="newTab()">+</button>
-        </div>
-
-        <!-- Toolbar -->
-        <div class="toolbar">
-
-            <button class="nav-button" onclick="goBack()" title="Back">
-                ←
-            </button>
-
-            <button class="nav-button" onclick="goForward()" title="Forward">
-                →
-            </button>
-
-            <button class="nav-button" onclick="reloadPage()" title="Reload">
-                ↻
-            </button>
-
-            <!-- Address bar -->
-            <form class="address-form" onsubmit="go(event)">
-                <span class="lock">⌕</span>
-                <input
-                    id="address"
-                    type="text"
-                    autocomplete="off"
-                    placeholder="Search Google or enter a URL"
-                >
-                <button class="star" type="button" onclick="bookmarkPage()">
-                    ☆
-                </button>
-            </form>
-
-            <button class="menu-button" onclick="toggleMenu()">
-                ⋮
-            </button>
-
-        </div>
-
-        <!-- Menu -->
-        <div id="menu" class="menu">
-            <button onclick="toggleDarkMode()">🌙 Dark mode</button>
-            <button onclick="goHome()">🏠 Home</button>
-            <button onclick="showAbout()">ⓘ About</button>
-        </div>
-
+    <div class="tabs">
+        <div class="tab">🌐 New Tab</div>
+        <button>+</button>
     </div>
 
+    <div class="toolbar">
+        <button>←</button>
+        <button>→</button>
+        <button onclick="location.reload()">↻</button>
 
-    <!-- New Tab Page -->
-    <main class="new-tab-page">
+        <form action="https://www.google.com/search" method="GET">
+            <input
+                name="q"
+                placeholder="Search Google or enter a URL"
+                autofocus
+            >
+        </form>
+
+        <button>⋮</button>
+    </div>
+
+    <main>
 
         <div class="google-logo">
             <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>
         </div>
 
-        <form class="google-search" onsubmit="searchGoogle(event)">
-            <span class="search-icon">⌕</span>
-
+        <form class="search-box" action="https://www.google.com/search" method="GET">
+            <span>⌕</span>
             <input
-                id="googleSearch"
-                type="text"
-                autocomplete="off"
+                name="q"
                 placeholder="Search Google"
+                autocomplete="off"
             >
-
-            <button type="button" class="mic">🎤</button>
-
-            <button type="submit" class="search-button">
-                Search
-            </button>
+            <button type="submit">Search</button>
         </form>
 
-
-        <!-- Shortcuts -->
         <div class="shortcuts">
-
-            <button class="shortcut" onclick="openSite('https://www.youtube.com')">
-                <div class="shortcut-icon youtube">▶</div>
-                <span>YouTube</span>
-            </button>
-
-            <button class="shortcut" onclick="openSite('https://www.google.com')">
-                <div class="shortcut-icon google">G</div>
-                <span>Google</span>
-            </button>
-
-            <button class="shortcut" onclick="openSite('https://www.wikipedia.org')">
-                <div class="shortcut-icon wiki">W</div>
-                <span>Wikipedia</span>
-            </button>
-
-            <button class="shortcut" onclick="openSite('https://github.com')">
-                <div class="shortcut-icon github">◆</div>
-                <span>GitHub</span>
-            </button>
-
+            <a href="https://www.youtube.com">▶ YouTube</a>
+            <a href="https://www.wikipedia.org">W Wikipedia</a>
+            <a href="https://github.com">◆ GitHub</a>
         </div>
 
     </main>
-
-
-    <footer>
-        <span>My Chrome</span>
-        <span>Customize Chrome</span>
-    </footer>
-
-
-    <script src="script.js"></script>
 
 </body>
 </html>
