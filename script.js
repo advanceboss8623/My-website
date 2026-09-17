@@ -1,6 +1,5 @@
 function go() {
-  let input = document.getElementById("url").value;
-  let page = document.getElementById("page");
+  let input = document.getElementById("url").value.trim();
 
   if (!input.startsWith("http://") &&
       !input.startsWith("https://")) {
@@ -8,5 +7,5 @@ function go() {
             encodeURIComponent(input);
   }
 
-  page.src = input;
+  window.location.href = input;
 }
