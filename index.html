@@ -1,7 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Chrome</title>
+    <title>My Chrome</title>        
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #202124;
+        }
+
+        .tabs {
+            height: 40px;
+            background: #dee1e6;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+        }
+
+        .tab {
+            background: white;
+            padding: 9px 25px;
+            border-radius: 10px 10px 0 0;
+            font-size: 14px;
+        }
+
+        .tabs button {
+            border: none;
+            background: transparent;
+            font-size: 24px;
+            margin-left: 8px;
+        }
+
+        .toolbar {
+            height: 52px;
+            background: #fff;
+            display: flex; /* Fixed the typo here */
+        }
+    </style>
+    <!-- Keep this line only if you also have an external style.css file -->
     <link rel="stylesheet" href="style.css">
 </head>
 
