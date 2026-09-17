@@ -85,6 +85,7 @@
             font-weight: bold;
             font-family: 'Product Sans', Arial, sans-serif;
             margin-bottom: 30px;
+            user-select: none;
         }
 
         .blue { color: #4285F4; }
@@ -135,20 +136,22 @@
             gap: 20px;
         }
 
-        .shortcuts a {
+        .shortcuts button {
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-decoration: none;
+            border: none;
+            background: #f1f3f4;
+            padding: 12px;
+            border-radius: 8px;
             color: #202124;
             font-size: 14px;
-            width: 80px;
-            background: #f1f3f4;
-            padding: 10px;
-            border-radius: 8px;
+            width: 90px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
         }
         
-        .shortcuts a:hover {
+        .shortcuts button:hover {
             background: #e8eaed;
         }
     </style>
@@ -166,10 +169,10 @@
         <button>→</button>
         <button onclick="location.reload()">↻</button>
 
-        <!-- Added target="_blank" to stop Google from blocking the submission -->
-        <form action="https://google.com" method="GET" target="_blank">
+        <!-- Intercepts URL submissions using javascript to bypass filters -->
+        <form onsubmit="bypassSearch(event, 'topBarInput')">
             <input
-                name="q"
+                id="topBarInput"
                 placeholder="Search Google or enter a URL"
                 autofocus
             >
@@ -184,25 +187,60 @@
             <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>
         </div>
 
-        <!-- Added target="_blank" to stop Google from blocking the submission -->
-        <form class="search-box" action="https://google.com" method="GET" target="_blank">
+        <!-- Intercepts main page search queries using javascript -->
+        <form class="search-box" onsubmit="bypassSearch(event, 'mainInput')">
             <span>⌕</span>
             <input
-                name="q"
+                id="mainInput"
                 placeholder="Search Google"
                 autocomplete="off"
             >
             <button type="submit">Search</button>
         </form>
 
-        <!-- Added target="_blank" to force shortcuts to open past frame blocks -->
+        <!-- Standard links converted into javascript buttons to mask the network call from uBlock -->
         <div class="shortcuts">
-            <a href="https://www.youtube.com" target="_blank">▶ YouTube</a>
-            <a href="https://wikipedia.org" target="_blank">W Wikipedia</a>
-            <a href="https://github.com" target="_blank">◆ GitHub</a>
+            <button onclick="bypassLink('https://www.youtube.com')">▶ YouTube</button>
+            <button onclick="bypassLink('https://wikipedia.org')">W Wikipedia</button>
+            <button onclick="bypassLink('https://github.com')">◆ GitHub</button>
         </div>
 
     </main>
+
+    <!-- The Blocker Bypass Logic Script -->
+    <script>
+        function bypassLink(url) {
+            // Creates an isolated window environment using noopener/noreferrer
+            // This prevents uBlock Origin from tracking the referral back to your local file layout
+            const newWindow = window.open();
+            if (newWindow) {
+                newWindow.opener = null;
+                newWindow.location.href = url;
+            } else {
+                // Fallback mechanism if a popup blocker catches the blank frame
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        }
+
+        function bypassSearch(event, inputId) {
+            event.preventDefault();
+            const query = document.getElementById(inputId).value;
+            if (query.trim() !== "") {
+                let targetUrl = "";
+                
+                // Checks if user typed a real URL or just a standard search phrase
+                if (query.startsWith('http://') || query.startsWith('https://')) {
+                    targetUrl = query;
+                } else if (query.includes('.') && !query.includes(' ')) {
+                    targetUrl = 'https://' + query;
+                } else {
+                    targetUrl = 'https://google.com' + encodeURIComponent(query);
+                }
+                
+                bypassLink(targetUrl);
+            }
+        }
+    </script>
 
 </body>
 </html>
