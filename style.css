@@ -1,0 +1,11 @@
+#proxyBtn {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+#proxyBtn:hover {
+    background: #ddd;
+}
