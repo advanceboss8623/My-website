@@ -1,6 +1,72 @@
-<form class="toolbar-form" onsubmit="openWebsite(event)">
-    <input
-        id="address"
-        placeholder="Search Google or enter a URL"
-    >
-</form>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Chrome</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Inline basic styles for the new proxy toggle -->
+    <style>
+        .proxy-status {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .proxy-status.active { background: #e0ffe0; color: green; }
+        .proxy-status.inactive { background: #ffe0e0; color: red; }
+    </style>
+</head>
+
+<body>
+
+    <div class="tabs">
+        <div class="tab">🌐 New Tab</div>
+        <button>+</button>
+    </div>
+
+    <div class="toolbar">
+        <button>←</button>
+        <button>→</button>
+        <button onclick="location.reload()">↻</button>
+
+        <!-- Proxy Toggle Button -->
+        <button onclick="toggleProxy()" id="proxyBtn" title="Toggle Proxy">🌐 Proxy: OFF</button>
+
+        <form action="https://www.google.com/search" method="GET">
+            <input
+                name="q"
+                placeholder="Search Google or enter a URL"
+                autofocus
+            >
+        </form>
+
+        <button>⋮</button>
+    </div>
+
+    <main>
+
+        <div class="google-logo">
+            <span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>
+        </div>
+
+        <form class="search-box" action="https://www.google.com/search" method="GET">
+            <span>⌕</span>
+            <input
+                name="q"
+                placeholder="Search Google"
+                autocomplete="off"
+            >
+            <button type="submit">Search</button>
+        </form>
+
+        <div class="shortcuts">
+            <a href="https://www.youtube.com" onclick="loadViaProxy(event)">▶ YouTube</a>
+            <a href="https://www.wikipedia.org" onclick="loadViaProxy(event)">W Wikipedia</a>
+            <a href="https://github.com" onclick="loadViaProxy(event)">◆ GitHub</a>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
