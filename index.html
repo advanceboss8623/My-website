@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Proxy</title>
+    <title>Universal Proxy</title>
     <style>
         body {
             margin: 0;
@@ -91,12 +91,20 @@
             border-radius: 8px;
             z-index: 100;
         }
+        
+        .status-bar {
+            background-color: #2d2d2d;
+            padding: 5px 20px;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid #444;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>🔒 Proxy</h1>
+        <h1>🔒 Universal Proxy</h1>
         <div class="search-box">
             <input type="text" id="urlInput" placeholder="Enter URL or search term...">
             <button id="goBtn">Go</button>
@@ -105,11 +113,11 @@
 
     <div class="iframe-container">
         <div id="loading" class="loading">Loading...</div>
-        <!-- 
-            The iframe src is set via JS. 
-            We use a relative path '/URL' so the browser sends requests to our Python server.
-        -->
         <iframe id="contentFrame"></iframe>
+    </div>
+    
+    <div class="status-bar">
+        Proxy: 127.0.0.1:8080 | Notes: YouTube links are auto-converted to embeds. Clicking links works.
     </div>
 
     <script>
@@ -118,8 +126,8 @@
         const goBtn = document.getElementById('goBtn');
         const loading = document.getElementById('loading');
 
-        // Default to Google
-        urlInput.value = "https://www.google.com";
+        // Default to YouTube
+        urlInput.value = "https://www.youtube.com";
 
         function navigate(url) {
             if (!url) return;
@@ -134,10 +142,7 @@
             urlInput.value = url;
             loading.style.display = 'block';
             
-            // Key: We prepend '/' to the URL.
-            // This makes the browser send a request to: http://127.0.0.1:8080/https://google.com
-            // Our Python server will strip the '/' and fetch 'https://google.com'
-            // Then it will rewrite the links so they also go to '/https://...'
+            // Prepend '/' to send request to our local proxy
             iframe.src = `/${url}`;
         }
 
