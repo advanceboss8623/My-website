@@ -3,84 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Proxy</title>
+    <title>Advanced Proxy</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: white;
             display: flex;
             flex-direction: column;
             height: 100vh;
         }
 
-        /* Top Bar */
-        .top-bar {
-            background-color: #333;
-            color: white;
+        .header {
+            background-color: #2d2d2d;
             padding: 10px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 1000;
+            gap: 10px;
+            border-bottom: 1px solid #444;
         }
 
-        .top-bar h1 {
+        .header h1 {
             margin: 0;
             font-size: 18px;
+            color: #007acc;
         }
 
-        /* Proxy Toggle Button */
-        #proxyToggle {
-            background-color: #d32f2f; /* Red for OFF */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            flex-grow: 1;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #333;
+            color: white;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus {
+            outline: 2px solid #007acc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007acc;
             color: white;
             border: none;
-            padding: 8px 15px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
-            transition: background-color 0.3s;
         }
 
-        #proxyToggle.active {
-            background-color: #388e3c; /* Green for ON */
+        button:hover {
+            background-color: #005a9e;
         }
 
-        /* Search Bar */
-        .search-container {
-            display: flex;
-            gap: 10px;
-            padding: 10px 20px;
-            background-color: #fff;
-            border-bottom: 1px solid #ccc;
-        }
-
-        #urlInput {
-            flex-grow: 1;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        #goBtn {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #1976d2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #goBtn:hover {
-            background-color: #1565c0;
-        }
-
-        /* Iframe Container */
         .iframe-container {
             flex-grow: 1;
             position: relative;
@@ -94,133 +78,80 @@
             display: block;
         }
 
-        /* Loading Indicator */
-        #loading {
+        .loading {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 20px;
             color: #333;
             display: none;
-            z-index: 1001;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.9);
             padding: 20px;
             border-radius: 8px;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <h1>🌐 Proxy Master</h1>
-        <button id="proxyToggle">Proxy: OFF</button>
-    </div>
-
-    <div class="search-container">
-        <input type="text" id="urlInput" placeholder="Enter URL or search term...">
-        <button id="goBtn">Go</button>
+    <div class="header">
+        <h1>🔒 Proxy</h1>
+        <div class="search-box">
+            <input type="text" id="urlInput" placeholder="Enter URL or search term...">
+            <button id="goBtn">Go</button>
+        </div>
     </div>
 
     <div class="iframe-container">
-        <div id="loading">Loading...</div>
-        <iframe id="contentFrame" src="about:blank"></iframe>
+        <div id="loading" class="loading">Loading...</div>
+        <!-- 
+            The iframe src is set via JS. 
+            We use a relative path '/URL' so the browser sends requests to our Python server.
+        -->
+        <iframe id="contentFrame"></iframe>
     </div>
 
     <script>
-        const proxyToggle = document.getElementById('proxyToggle');
         const iframe = document.getElementById('contentFrame');
         const urlInput = document.getElementById('urlInput');
         const goBtn = document.getElementById('goBtn');
         const loading = document.getElementById('loading');
 
-        let isProxyOn = false;
-        let currentUrl = "";
+        // Default to Google
+        urlInput.value = "https://www.google.com";
 
-        // 1. Toggle Proxy
-        proxyToggle.addEventListener('click', () => {
-            isProxyOn = !isProxyOn;
-            if (isProxyOn) {
-                proxyToggle.innerText = "Proxy: ON";
-                proxyToggle.classList.add('active');
-            } else {
-                proxyToggle.innerText = "Proxy: OFF";
-                proxyToggle.classList.remove('active');
-            }
-        });
-
-        // 2. Handle Go/Search
         function navigate(url) {
-            // Clean URL
             if (!url) return;
-            if (!url.startsWith('http')) {
+            
+            // If it's a search term, send it to Google
+            if (!url.includes('.')) {
+                url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+            } else if (!url.startsWith('http')) {
                 url = 'https://' + url;
             }
+
             urlInput.value = url;
-            currentUrl = url;
-
-            // Show loading
             loading.style.display = 'block';
-
-            let targetUrl = url;
-            let proxyUrl = "";
-
-            if (isProxyOn) {
-                // Use a robust proxy that supports iframe embedding
-                // 'https://corsproxy.io/?' is good, but 'https://api.allorigins.win/' is better for raw HTML
-                // However, for full navigation, we need a service that returns the full page.
-                // We'll use 'https://corsproxy.io/?' as it's generally more reliable for iframes.
-                proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-            } else {
-                proxyUrl = url;
-            }
-
-            iframe.src = proxyUrl;
+            
+            // Key: We prepend '/' to the URL.
+            // This makes the browser send a request to: http://127.0.0.1:8080/https://google.com
+            // Our Python server will strip the '/' and fetch 'https://google.com'
+            // Then it will rewrite the links so they also go to '/https://...'
+            iframe.src = `/${url}`;
         }
 
         goBtn.addEventListener('click', () => navigate(urlInput.value));
-        
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') navigate(urlInput.value);
         });
 
-        // 3. Handle Link Rewriting (The "Perfect" Part)
-        // Since we are in an iframe, we can't directly access its document easily due to CORS.
-        // So we will use a 'postMessage' approach or simply reload the iframe with the new URL.
-        
         iframe.addEventListener('load', () => {
             loading.style.display = 'none';
-            
-            if (!isProxyOn) return; // No need to rewrite if proxy is off
-
-            try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                const links = iframeDoc.querySelectorAll('a');
-                
-                links.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                        // Prevent default behavior
-                        link.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            let newUrl = href;
-                            // Handle relative URLs
-                            if (newUrl.startsWith('/')) {
-                                const urlObj = new URL(currentUrl);
-                                newUrl = `${urlObj.protocol}//${urlObj.host}${newUrl}`;
-                            }
-                            navigate(newUrl);
-                        });
-                    }
-                });
-            } catch (err) {
-                // CORS might block access to iframe doc if the proxy doesn't send correct headers
-                console.log("Could not rewrite links directly, clicking will reload with new URL.");
-            }
         });
 
         // Initial Load
-        navigate("https://www.google.com");
+        navigate(urlInput.value);
     </script>
 
 </body>
