@@ -5,7 +5,6 @@ import urllib.parse
 import urllib.error
 import re
 import logging
-import json
 
 HOST = '127.0.0.1'
 PORT = 8080
@@ -33,14 +32,14 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         try:
             req = urllib.request.Request(url, method=method)
             
-            # Add headers from the client
+            # 1. Clean headers: remove Host, Origin, and Content-Length so the proxy handles them
             for header in self.headers:
-                if header.lower() in ['host', 'content-length', 'origin']:
-                    continue # Let the proxy decide these or omit them to avoid CORS issues
+                if header.lower() in ['host', 'content-length', 'origin', 'x-forwarded-for', 'x-real-ip']:
+                    continue
                 
                 req.add_header(header, self.headers[header])
             
-            # Force User-Agent to look like a browser to bypass bot-detection
+            # 2. Force a Browser User-Agent
             req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
             content_length = int(self.headers.get('Content-Length', 0))
@@ -58,7 +57,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             content_type = response.headers.get('Content-Type', '')
             content = response.read()
 
-            # Rewrite HTML/CSS to fix relative URLs
+            # 3. Rewrite HTML/CSS
             if 'text/html' in content_type:
                 content = self.rewrite_html(content, url)
             elif 'text/css' in content_type:
@@ -68,10 +67,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', content_type)
             self.send_header('Content-Length', str(len(content)))
             
-            # These headers force the browser to allow the content to be embedded
+            # 4. The "CORS" Fix
             self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('X-Frame-Options', 'SAMEORIGIN')
-            self.send_header('Content-Security-Policy', "frame-ancestors 'self' *;")
+            self.send_header('X-Frame-Options', 'ALLOW-FROM http://127.0.0.1:8080')
+            self.send_header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8080;")
             
             self.end_headers()
             self.wfile.write(content)
@@ -94,7 +93,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         html = re.sub(r'(["\'])/([^"]+)', r'\1/http://127.0.0.1:8080/\2', html)
         html = re.sub(r'(["\'])//([^"]+)', r'\1http://127.0.0.1:8080/\2', html)
 
-        # 3. FIX YOUTUBE EMBEDS - Force 'embed' format
+        # 3. YouTube Embed Fix
         # Convert watch?v= to embed/
         html = re.sub(r'youtube\.com/(?:watch\?v=|embed/)([a-zA-Z0-9_-]+)', r'https://www.youtube.com/embed/\1', html)
         
