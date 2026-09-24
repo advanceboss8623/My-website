@@ -5,6 +5,7 @@ import urllib.parse
 import urllib.error
 import re
 import logging
+import json
 
 HOST = '127.0.0.1'
 PORT = 8080
@@ -31,10 +32,17 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
         try:
             req = urllib.request.Request(url, method=method)
-            for header in self.headers:
-                if header.lower() not in ['host', 'content-length']:
-                    req.add_header(header, self.headers[header])
             
+            # Add headers from the client
+            for header in self.headers:
+                if header.lower() in ['host', 'content-length', 'origin']:
+                    continue # Let the proxy decide these or omit them to avoid CORS issues
+                
+                req.add_header(header, self.headers[header])
+            
+            # Force User-Agent to look like a browser to bypass bot-detection
+            req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length) if content_length > 0 else None
             if method == "POST" and post_data:
@@ -50,6 +58,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             content_type = response.headers.get('Content-Type', '')
             content = response.read()
 
+            # Rewrite HTML/CSS to fix relative URLs
             if 'text/html' in content_type:
                 content = self.rewrite_html(content, url)
             elif 'text/css' in content_type:
@@ -59,7 +68,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', content_type)
             self.send_header('Content-Length', str(len(content)))
             
-            # Force Embed Permissions
+            # These headers force the browser to allow the content to be embedded
             self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('X-Frame-Options', 'SAMEORIGIN')
             self.send_header('Content-Security-Policy', "frame-ancestors 'self' *;")
@@ -81,16 +90,16 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         html = re.sub(r'<meta[^>]*http-equiv=["\']?X-Frame-Options["\']?[^>]*>', '', html, flags=re.IGNORECASE)
         html = re.sub(r'<meta[^>]*http-equiv=["\']?Content-Security-Policy["\']?[^>]*>', '', html, flags=re.IGNORECASE)
 
-        # 2. Rewrite relative URLs to go through proxy
+        # 2. Rewrite relative URLs
         html = re.sub(r'(["\'])/([^"]+)', r'\1/http://127.0.0.1:8080/\2', html)
         html = re.sub(r'(["\'])//([^"]+)', r'\1http://127.0.0.1:8080/\2', html)
 
-        # 3. FIX YOUTUBE EMBEDS
+        # 3. FIX YOUTUBE EMBEDS - Force 'embed' format
+        # Convert watch?v= to embed/
+        html = re.sub(r'youtube\.com/(?:watch\?v=|embed/)([a-zA-Z0-9_-]+)', r'https://www.youtube.com/embed/\1', html)
+        
         # Add the allow attribute to all iframes
         html = re.sub(r'<iframe([^>]*)>', r'<iframe\1 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>', html, flags=re.IGNORECASE)
-        
-        # Fix YouTube embed URLs if they weren't already formatted that way
-        html = re.sub(r'youtube\.com/(?:watch\?v=|embed/)([a-zA-Z0-9_-]+)', r'https://www.youtube.com/embed/\1', html)
 
         return html.encode('utf-8')
 
