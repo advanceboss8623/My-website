@@ -5,9 +5,7 @@ import urllib.parse
 import urllib.error
 import re
 import logging
-import os
 
-# Configuration
 HOST = '127.0.0.1'
 PORT = 8080
 
@@ -20,16 +18,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         self.handle_proxy_request("GET")
 
-    def do_POST(self):
-        self.handle_proxy_request("POST")
-
     def handle_proxy_request(self, method):
         path = self.path
         if path.startswith('/'):
             path = path[1:]
         
         url = urllib.parse.unquote(path)
-        
         if not url:
             url = "https://www.youtube.com"
 
@@ -37,15 +31,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
         try:
             req = urllib.request.Request(url, method=method)
-            
-            # Forward headers, but strip Host to avoid confusion
             for header in self.headers:
-                if header.lower() not in ['host', 'content-length', 'content-length']:
+                if header.lower() not in ['host', 'content-length']:
                     req.add_header(header, self.headers[header])
             
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length) if content_length > 0 else None
-            
             if method == "POST" and post_data:
                 req.data = post_data
 
@@ -55,9 +46,6 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             except urllib.error.HTTPError as e:
                 self.send_error(e.code, f"Proxy Error: {e.reason}")
                 return
-            except Exception as e:
-                self.send_error(502, "Bad Gateway")
-                return
 
             content_type = response.headers.get('Content-Type', '')
             content = response.read()
@@ -66,17 +54,15 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 content = self.rewrite_html(content, url)
             elif 'text/css' in content_type:
                 content = self.rewrite_css(content, url)
-            elif 'text/javascript' in content_type:
-                content = self.rewrite_js(content, url)
             
             self.send_response(200)
             self.send_header('Content-Type', content_type)
             self.send_header('Content-Length', str(len(content)))
             
-            # CRITICAL: Force these headers to allow embedding
+            # Force Embed Permissions
             self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('X-Frame-Options', 'SAMEORIGIN') # Or 'DENY' if you prefer strict, but SAMEORIGIN is safer for iframe
-            self.send_header('Content-Security-Policy', "frame-ancestors 'self' *;") # Allow ANYONE to embed us
+            self.send_header('X-Frame-Options', 'SAMEORIGIN')
+            self.send_header('Content-Security-Policy', "frame-ancestors 'self' *;")
             
             self.end_headers()
             self.wfile.write(content)
@@ -91,19 +77,20 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         except UnicodeDecodeError:
             return html_bytes
 
-        # 1. Remove X-Frame-Options meta tags
+        # 1. Remove blocking meta tags
         html = re.sub(r'<meta[^>]*http-equiv=["\']?X-Frame-Options["\']?[^>]*>', '', html, flags=re.IGNORECASE)
-        
-        # 2. Remove CSP meta tags
         html = re.sub(r'<meta[^>]*http-equiv=["\']?Content-Security-Policy["\']?[^>]*>', '', html, flags=re.IGNORECASE)
 
-        # 3. Rewrite relative URLs to point to our proxy
-        # This ensures images, CSS, and JS also go through the proxy
+        # 2. Rewrite relative URLs to go through proxy
         html = re.sub(r'(["\'])/([^"]+)', r'\1/http://127.0.0.1:8080/\2', html)
         html = re.sub(r'(["\'])//([^"]+)', r'\1http://127.0.0.1:8080/\2', html)
+
+        # 3. FIX YOUTUBE EMBEDS
+        # Add the allow attribute to all iframes
+        html = re.sub(r'<iframe([^>]*)>', r'<iframe\1 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>', html, flags=re.IGNORECASE)
         
-        # Fix specific YouTube iframe issues if present
-        html = re.sub(r'(?i)allowfullscreen="false"', 'allowfullscreen="true"', html)
+        # Fix YouTube embed URLs if they weren't already formatted that way
+        html = re.sub(r'youtube\.com/(?:watch\?v=|embed/)([a-zA-Z0-9_-]+)', r'https://www.youtube.com/embed/\1', html)
 
         return html.encode('utf-8')
 
@@ -112,13 +99,8 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             css = css_bytes.decode('utf-8')
         except UnicodeDecodeError:
             return css_bytes
-        # Rewrite relative URLs in CSS
         css = re.sub(r'url\(([^)]+)\)', lambda m: f"url('{base_url}{m.group(1)}')", css)
         return css.encode('utf-8')
-
-    def rewrite_js(self, js_bytes, base_url):
-        # Basic rewrite for JS, though less common to have assets here
-        return js_bytes
 
 if __name__ == "__main__":
     with socketserver.TCPServer((HOST, PORT), ProxyHandler) as httpd:
